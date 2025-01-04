@@ -1,4 +1,0 @@
-services:
-  sqlite:
-    container_name: sqlite
-    image: nouchka/sqlite3:latest

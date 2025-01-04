@@ -18,9 +18,6 @@ type Config struct {
 	// DatabaseDSN - адрес подключения к базе postgres, нужен при выборе движка хранения коротких ссылок в базе.
 	DatabaseDSN string
 
-	// ServerKeyPath - ключ для сертификата
-	ServerKeyPath string
-
 	// ServerCertPath - сертификат
 	ServerCertPath string
 }
@@ -52,19 +49,9 @@ func NewConfig() (*Config, error) {
 		return nil, errors.New("no database DSN provided")
 	}
 
-	serverKeyPath := viper.GetString("server_key_path")
-	if serverKeyPath == "" {
-		return nil, errors.New("no server file key path provided")
-	}
-
-	_, err = os.Stat(serverKeyPath)
-	if err != nil {
-		return nil, err
-	}
-
 	serverCertPath := viper.GetString("server_cert_path")
 	if serverCertPath == "" {
-		return nil, errors.New("no server file certificate path provided")
+		return nil, errors.New("no path for server certificates is provided")
 	}
 
 	_, err = os.Stat(serverCertPath)
@@ -76,7 +63,6 @@ func NewConfig() (*Config, error) {
 		Environment:    environment,
 		ServerAddress:  serverAddress,
 		DatabaseDSN:    databaseDSN,
-		ServerKeyPath:  serverKeyPath,
 		ServerCertPath: serverCertPath,
 	}, nil
 }
