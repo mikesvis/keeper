@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"keeper/internal/domain"
 	"keeper/internal/service/secret"
@@ -16,6 +17,7 @@ type MenuModel struct {
 	us   *user.Service
 	ss   *secret.Service
 	list list.Model
+	err  error
 }
 
 func NewMenuModel(auth *domain.AuthenticatedUser, us *user.Service, ss *secret.Service) MenuModel {
@@ -36,6 +38,7 @@ func NewMenuModel(auth *domain.AuthenticatedUser, us *user.Service, ss *secret.S
 		list: l,
 		us:   us,
 		ss:   ss,
+		err:  nil,
 	}
 }
 
@@ -54,10 +57,13 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 0:
 				return NewSecretTypeMenuModel(m, m.us, m.ss), nil
 			case 1, 2:
-				//secrets, _ := m.service.GetUserSecrets(context.Background())
-				// todo tui error
-				return m, nil
-				//return NewSecretsList(m, secrets, m.service, m.list.Cursor() == 2), nil
+				secrets, err := m.ss.GetUserSecrets(context.Background(), m.GetUserID())
+				if err != nil {
+					m.err = err
+					return m, nil
+				}
+
+				return NewSecretsListModel(m, secrets, m.ss, m.list.Cursor() == 2), nil
 			}
 		}
 
@@ -72,6 +78,10 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MenuModel) View() string {
+	if m.err != nil {
+		return docForListStyle.Render(errToString(m.err))
+	}
+
 	return docForListStyle.Render(m.list.View())
 }
 

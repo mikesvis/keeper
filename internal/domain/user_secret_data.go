@@ -17,8 +17,6 @@ func MakeUserSecretData(secretType UserSecretType, data []byte) (UserSecretData,
 		return newUserSecretBankCardFromData(data)
 	case UserSecretTextType:
 		return newUserSecretTextFromData(data)
-	case UserSecretFileType:
-		return newUserSecretFileFromData(data)
 	}
 
 	return nil, errors.New("invalid secret type")

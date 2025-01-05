@@ -42,3 +42,39 @@ func (s *Service) Create(ctx context.Context, userID uuid.UUID, secretType domai
 	}
 	return nil
 }
+
+func (s *Service) GetUserSecrets(ctx context.Context, userID uuid.UUID) ([]*domain.UserSecret, error) {
+	secrets, err := s.secretStorage.GetAllForUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, oneSecret := range secrets {
+		d, err := s.fileStorage.Get(ctx, oneSecret.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := domain.MakeUserSecretData(oneSecret.Type, d)
+		if err != nil {
+			return nil, err
+		}
+		oneSecret.Data = &data
+	}
+
+	return secrets, nil
+}
+
+func (s *Service) Delete(ctx context.Context, secretId uuid.UUID) error {
+	err := s.secretStorage.Delete(ctx, secretId)
+	if err != nil {
+		return err
+	}
+
+	err = s.fileStorage.Delete(ctx, secretId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

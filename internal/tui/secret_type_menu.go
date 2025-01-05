@@ -57,8 +57,6 @@ func (m SecretTypeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return NewAddCreditCardModel(m.parent, m.ss), nil
 			case 2:
 				return NewNoteModel(m.parent, m.ss), nil
-			//case 3:
-			//	return NewAddSecretFileModel(m.parent, m.service), nil
 			default:
 				return m.parent, nil
 			}

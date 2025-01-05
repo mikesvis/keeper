@@ -1,0 +1,9 @@
+environment: development
+server_address:
+database_dsn:
+server_cert_path:
+minio_bucket_name:
+minio_endpoint:
+minio_access_key:
+minio_secret_key:
+minio_use_ssl: false
