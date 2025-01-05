@@ -20,13 +20,13 @@ func NewStorage(c *config.Config, client *minio.Client) *Storage {
 	}
 }
 
-func (s *Storage) Store(ctx context.Context, objectId uuid.UUID, data []byte) error {
+func (s *Storage) Store(ctx context.Context, objectID uuid.UUID, data []byte) error {
 	reader := bytes.NewReader(data)
 
 	_, err := s.client.PutObject(
 		ctx,
 		s.bucketName,
-		objectId.String(),
+		objectID.String(),
 		reader,
 		-1,
 		minio.PutObjectOptions{},
@@ -39,11 +39,11 @@ func (s *Storage) Store(ctx context.Context, objectId uuid.UUID, data []byte) er
 	return nil
 }
 
-func (s *Storage) Get(ctx context.Context, objectId uuid.UUID) ([]byte, error) {
+func (s *Storage) Get(ctx context.Context, objectID uuid.UUID) ([]byte, error) {
 	object, err := s.client.GetObject(
 		ctx,
 		s.bucketName,
-		objectId.String(),
+		objectID.String(),
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
@@ -63,6 +63,6 @@ func (s *Storage) Get(ctx context.Context, objectId uuid.UUID) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *Storage) Delete(ctx context.Context, objectId uuid.UUID) error {
-	return s.client.RemoveObject(ctx, s.bucketName, objectId.String(), minio.RemoveObjectOptions{})
+func (s *Storage) Delete(ctx context.Context, objectID uuid.UUID) error {
+	return s.client.RemoveObject(ctx, s.bucketName, objectID.String(), minio.RemoveObjectOptions{})
 }

@@ -55,7 +55,7 @@ func (s *Storage) CreateSecret(ctx context.Context, secret *domain.UserSecret) (
 		return nil, err
 	}
 
-	storedSecret, err := s.FindById(ctx, secret.ID)
+	storedSecret, err := s.FindByID(ctx, secret.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *Storage) Delete(ctx context.Context, ID uuid.UUID) error {
 	return err
 }
 
-func (s *Storage) FindById(ctx context.Context, ID uuid.UUID) (*domain.UserSecret, error) {
+func (s *Storage) FindByID(ctx context.Context, ID uuid.UUID) (*domain.UserSecret, error) {
 	var secret domain.UserSecret
 	row := s.db.QueryRowContext(ctx, "select id, user_id, type, name, created_at, updated_at from secrets where id = $1", ID)
 

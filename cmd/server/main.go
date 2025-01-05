@@ -34,6 +34,10 @@ func main() {
 	appLogger.Infof("initialized logger and config: %+v", appConfig)
 
 	keeper, err := app.NewApp(appConfig, appLogger)
+	if err != nil {
+		fmt.Printf("error while initializing keeper app: %s\n", err.Error())
+		os.Exit(1)
+	}
 
 	srv, err := wish.NewServer(
 		wish.WithAddress(appConfig.ServerAddress),

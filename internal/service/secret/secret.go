@@ -65,13 +65,13 @@ func (s *Service) GetUserSecrets(ctx context.Context, userID uuid.UUID) ([]*doma
 	return secrets, nil
 }
 
-func (s *Service) Delete(ctx context.Context, secretId uuid.UUID) error {
-	err := s.secretStorage.Delete(ctx, secretId)
+func (s *Service) Delete(ctx context.Context, secretID uuid.UUID) error {
+	err := s.secretStorage.Delete(ctx, secretID)
 	if err != nil {
 		return err
 	}
 
-	err = s.fileStorage.Delete(ctx, secretId)
+	err = s.fileStorage.Delete(ctx, secretID)
 	if err != nil {
 		return err
 	}
