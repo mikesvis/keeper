@@ -3,15 +3,17 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"keeper/internal/app"
+	"keeper/internal/service/secret"
+	"keeper/internal/service/user"
 )
 
 type StartModel struct {
-	list      list.Model
-	keeperApp *app.App
+	list list.Model
+	us   *user.Service
+	ss   *secret.Service
 }
 
-func New(keeperApp *app.App) StartModel {
+func NewStart(us *user.Service, ss *secret.Service) StartModel {
 	l := list.New([]list.Item{
 		ModelItem{title: "Sign-In", desc: "Sing in by email and password"},
 		ModelItem{title: "Sign-Up", desc: "Sign up for new user"},
@@ -22,8 +24,9 @@ func New(keeperApp *app.App) StartModel {
 	l.Title = "Authorization required"
 
 	return StartModel{
-		list:      l,
-		keeperApp: keeperApp,
+		list: l,
+		us:   us,
+		ss:   ss,
 	}
 }
 
@@ -40,9 +43,9 @@ func (m StartModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEnter:
 			switch m.list.Cursor() {
 			case 0:
-				return nil, nil
+				return NewLoginModel(m, m.us, m.ss), nil
 			case 1:
-				return nil, nil
+				return NewRegisterModel(m, m.us, m.ss), nil
 			}
 		}
 

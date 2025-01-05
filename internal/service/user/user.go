@@ -3,17 +3,17 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/charmbracelet/ssh"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"keeper/internal/domain"
 	"keeper/internal/storage/user"
+	"keeper/pkg/hash"
+	"keeper/pkg/validators"
 )
 
 var ErrUnauthorizedUser = errors.New(`can not authorize user`)
-var ErrInternal = errors.New(`failed getting user from storage`)
-
-type ContextKey string
-
-const UserIDContextKey ContextKey = "UserID"
+var ErrIternal = errors.New(`failed getting user from storage`)
+var ErrConflictCreatingUser = errors.New(`user with provided creds already exists`)
 
 type Service struct {
 	storage *user.Storage
@@ -27,28 +27,64 @@ func NewService(storage *user.Storage, logger *zap.SugaredLogger) *Service {
 	}
 }
 
-func (s *Service) GetUserIDByKey(ctx context.Context, key string) (uint64, error) {
-	s.logger.Info("searching incoming user by public key")
-	userID, err := s.storage.GetUserIDByKey(ctx, key)
+func (s *Service) Login(ctx context.Context, login string, password string) (*domain.AuthenticatedUser, error) {
+	err := validators.LoginValidator(login)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validators.PasswordValidator(password)
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Infof("searching user by creds (no password here he-he) login %s", login)
+	userID, err := s.storage.GetUserID(ctx, login, hash.Hash([]byte(password)))
 
 	if err != nil {
-		s.logger.Errorf("error while searching user by public key: %v", err)
-		return 0, ErrInternal
+		s.logger.Errorf("error while searching user by creds with login %s, %v", login, err)
+		return nil, ErrIternal
 	}
 
-	if userID == 0 {
-		s.logger.Infof("user is not found by public key")
-		return 0, ErrUnauthorizedUser
+	if userID == uuid.Nil {
+		s.logger.Errorf("error because you are a cheater, %s!", login)
+		return nil, ErrUnauthorizedUser
 	}
 
-	s.logger.Infof("found user id %d by public key", userID)
-	return userID, nil
+	s.logger.Infof("found user by creds login %s id %s", login, userID)
+	return &domain.AuthenticatedUser{ID: userID}, nil
 }
 
-func (s *Service) IsUserAuthed(c ssh.Context) bool {
-	if c.Value(UserIDContextKey) != nil {
-		return true
+func (s *Service) Register(ctx context.Context, login string, password string) (*domain.AuthenticatedUser, error) {
+	err := validators.LoginValidator(login)
+	if err != nil {
+		return nil, err
 	}
 
-	return false
+	err = validators.PasswordValidator(password)
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Infof("searching existing user by login %s", login)
+	exist, err := s.storage.ExistByLogin(ctx, login)
+	if err != nil {
+		s.logger.Errorf("error while searching existing user by login %s, %v", login, err)
+		return nil, ErrIternal
+	}
+
+	if exist {
+		s.logger.Infof("user with login %s already exists", login)
+		return nil, ErrConflictCreatingUser
+	}
+
+	s.logger.Infof("creating user with login %s", login)
+	userID, err := s.storage.Create(ctx, login, hash.Hash([]byte(password)))
+	if err != nil {
+		s.logger.Errorf("error while creating new user by login %s, %v", login, err)
+		return nil, err
+	}
+
+	s.logger.Infof("created user with login %s id %s", login, userID)
+	return &domain.AuthenticatedUser{ID: userID}, nil
 }

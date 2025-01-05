@@ -13,8 +13,6 @@ import (
 	"keeper/internal/config"
 	"keeper/internal/logger"
 	"keeper/internal/tui"
-
-	// 	"keeper/internal/tui"
 	"os"
 )
 
@@ -35,13 +33,13 @@ func main() {
 
 	appLogger.Infof("initialized logger and config: %+v", appConfig)
 
-	keeperApp, err := app.NewApp(appConfig, appLogger)
+	keeper, err := app.NewApp(appConfig, appLogger)
 
 	srv, err := wish.NewServer(
 		wish.WithAddress(appConfig.ServerAddress),
 		wish.WithHostKeyPath(appConfig.ServerCertPath),
 		wish.WithMiddleware(
-			bubbletea.Middleware(myHandler(keeperApp)),
+			bubbletea.Middleware(myHandler(keeper)),
 			activeterm.Middleware(),
 		),
 	)
@@ -52,12 +50,11 @@ func main() {
 
 	appLogger.Info("Starting SSH server ", appConfig.ServerAddress)
 	if err = srv.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		// We ignore ErrServerClosed because it is expected.
 		log.Error("Could not start server", "error", err)
 	}
 }
 
-func myHandler(keeperApp *app.App) bubbletea.Handler {
+func myHandler(keeper *app.App) bubbletea.Handler {
 	return func(sess ssh.Session) (tea.Model, []tea.ProgramOption) {
 		_, _, active := sess.Pty()
 		if !active {
@@ -65,7 +62,7 @@ func myHandler(keeperApp *app.App) bubbletea.Handler {
 			return nil, nil
 		}
 
-		m := tui.New(keeperApp)
+		m := tui.NewStart(keeper.UserService, keeper.SecretService)
 		return m, []tea.ProgramOption{tea.WithAltScreen()}
 	}
 }

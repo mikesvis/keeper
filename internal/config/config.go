@@ -7,22 +7,18 @@ import (
 	"os"
 )
 
-// Config конфиг приложения
 type Config struct {
-	// Environment - окружение для сервера
-	Environment string
-
-	// ServerAddress - адрес сервера приложения
-	ServerAddress string
-
-	// DatabaseDSN - адрес подключения к базе postgres, нужен при выборе движка хранения коротких ссылок в базе.
-	DatabaseDSN string
-
-	// ServerCertPath - сертификат
-	ServerCertPath string
+	Environment     string
+	ServerAddress   string
+	DatabaseDSN     string
+	ServerCertPath  string
+	MinioBucketName string
+	MinioEndpoint   string
+	MinioAccessKey  string
+	MinioSecretKey  string
+	MinioUseSSL     bool
 }
 
-// NewConfig Инициализация настроек сервера
 func NewConfig() (*Config, error) {
 	var configFilePath string
 	flag.StringVarP(&configFilePath, "config", "c", "", "path to config file in yaml format")
@@ -59,10 +55,37 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
+	minioBucketName := viper.GetString("minio_bucket_name")
+	if minioBucketName == "" {
+		return nil, errors.New("no minio bucket name is provided")
+	}
+
+	minioEndpoint := viper.GetString("minio_endpoint")
+	if minioEndpoint == "" {
+		return nil, errors.New("no minio endpoint is provided")
+	}
+
+	minioAccessKey := viper.GetString("minio_access_key")
+	if minioAccessKey == "" {
+		return nil, errors.New("no minio access key is provided")
+	}
+
+	minioSecretKey := viper.GetString("minio_secret_key")
+	if minioSecretKey == "" {
+		return nil, errors.New("no minio cert key is provided")
+	}
+
+	minioUseSSL := viper.GetBool("minio_use_ssl")
+
 	return &Config{
-		Environment:    environment,
-		ServerAddress:  serverAddress,
-		DatabaseDSN:    databaseDSN,
-		ServerCertPath: serverCertPath,
+		Environment:     environment,
+		ServerAddress:   serverAddress,
+		DatabaseDSN:     databaseDSN,
+		ServerCertPath:  serverCertPath,
+		MinioBucketName: minioBucketName,
+		MinioEndpoint:   minioEndpoint,
+		MinioAccessKey:  minioAccessKey,
+		MinioSecretKey:  minioSecretKey,
+		MinioUseSSL:     minioUseSSL,
 	}, nil
 }
